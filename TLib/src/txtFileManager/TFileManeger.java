@@ -8,13 +8,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class TFileManeger {
+/**
+ * this class Responsibility: Work with file to Manage Data with text file. In
+ * each row, one record was stored.
+ * 
+ * @author f.zarepour
+ * @version 1.0
+ * @category Data Store Connection
+ * @since 2019-05-01
+ */
+public class TFileManeger implements IFileManager {
 	private String fileName;
+	private String folderPath;
 
 	public TFileManeger(String fileName) {
 		super();
 		// this.fileName = "K:\\Java WorkSpace\\" + fileName;
-		this.fileName = "C:\\Users\\f.zarepour\\git\\TLib\\TLib\\MyFiles\\" + fileName;
+		this.fileName = fileName;
+		this.folderPath = "Files";
 		this.CreateFile();
 	}
 
@@ -29,9 +40,23 @@ public class TFileManeger {
 		this.fileName = fileName;
 	}
 
+	private String getFileAddress() {
+		return folderPath + "\\" + this.getFileName();
+	}
+
 	////////////////////////////////////////////////////////////////////////////// CreateFile
 	private void CreateFile() {
-		File f1 = new File(this.getFileName());
+		// Check Folder Exist
+
+		File f1 = new File(this.folderPath);
+		if (!f1.exists()) {
+			try {
+				f1.mkdir();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		 f1 = new File(this.getFileAddress());
 		if (!f1.exists()) {
 			try {
 				f1.createNewFile();
@@ -62,7 +87,7 @@ public class TFileManeger {
 		String output = "";
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			return;
 		}
@@ -87,6 +112,7 @@ public class TFileManeger {
 	}
 
 	//////////////////////////////////////////////////////////////////////// insertRow
+
 	public void insertRow(int index, String text) {
 		if (index < 0) {
 			throw new IllegalArgumentException("index cannot be negative.");
@@ -94,7 +120,7 @@ public class TFileManeger {
 		String output = "";
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			return;
 		}
@@ -120,6 +146,44 @@ public class TFileManeger {
 		this.setStringToFile(output);
 	}
 
+	/////////////////////////////////////////////////////////////////////// UpdateRow
+	@Override
+	public void UpdateRow(int index, String text) {
+		if (index < 0) {
+			throw new IllegalArgumentException("index cannot be negative.");
+		}
+		String output = "";
+		Scanner sc;
+		try {
+			sc =getScanner();
+		} catch (FileNotFoundException e) {
+			return;
+		}
+
+		int cIndex = 0;// Counter of File Lines
+
+		while (sc.hasNext()) {
+			if (cIndex++ == index) {
+				if (output == "")
+					output += text;
+				else
+
+					output += "\r\n" + text;
+			} else {
+				if (output == "")
+					output += sc.nextLine();
+				else
+
+					output += "\r\n" + sc.nextLine();
+			}
+		}
+		if (cIndex < (index + 1)) {
+			throw new IllegalArgumentException("Index is out of array row range");
+		}
+		sc.close();
+		this.setStringToFile(output);
+	}
+
 	/////////////////////////////////////////////////////////////////////// GetRow
 	public String getRow(int index) {
 		if (index < 0) {
@@ -128,7 +192,7 @@ public class TFileManeger {
 		String output = "";
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException("File Not Found");
 		}
@@ -155,7 +219,7 @@ public class TFileManeger {
 		String output = null;
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException("File Not Found");
 		}
@@ -180,7 +244,7 @@ public class TFileManeger {
 		List<String> output = new ArrayList<>();
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException("File Not Found");
 		}
@@ -198,14 +262,14 @@ public class TFileManeger {
 	}
 
 	/////////////////////////////////////////////////////////////////////// getRowIndexStartWith
-	public int getRowIndexStartWith(String startWith) {
+	public int getFirstRowIndexStartWith(String startWith) {
 		if (startWith.isEmpty()) {
 			throw new IllegalArgumentException("startWith param is Empty");
 		}
 		int output = -1;
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException("File Not Found");
 		}
@@ -232,7 +296,7 @@ public class TFileManeger {
 		List<Integer> output = new ArrayList<Integer>();
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException("File Not Found");
 		}
@@ -254,14 +318,13 @@ public class TFileManeger {
 	/////////////////////////////////////////////////////////////////////// GetFromFile
 	private String getFromFile() {
 		String output = "";
-		File file = new File(this.fileName);
 		try {
 			// Create a new Scanner object which will read the data
 			// from the file passed in. To check if there are more
 			// line to read from it we check by calling the
 			// scanner.hasNextLine() method. We then read line one
 			// by one till all lines is read.
-			Scanner input = new Scanner(file);
+			Scanner input = getScanner();
 			while (input.hasNextLine()) {
 				if (output == "") {
 					output += input.nextLine();
@@ -279,7 +342,7 @@ public class TFileManeger {
 	private void setStringToFile(String s) {
 
 		try {
-			PrintWriter out = new PrintWriter(this.fileName);
+			PrintWriter out = new PrintWriter(this.getFileAddress());
 			out.print(s);
 			out.close();
 		} catch (FileNotFoundException e) {
@@ -298,7 +361,7 @@ public class TFileManeger {
 		int rowCount = 0;
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return rowCount;
@@ -312,12 +375,13 @@ public class TFileManeger {
 	}
 
 	//////////////////////////////////////////////////////////////////// getArrayFromFile
-	public String[] getArrayFromFile() {
+	@Override
+	public String[] getArray() {
 		int rowCount = this.getRowCount();
 		String[] output = new String[rowCount];
 		Scanner sc;
 		try {
-			sc = new Scanner(new File(this.fileName));
+			sc = getScanner();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return null;
@@ -329,5 +393,16 @@ public class TFileManeger {
 		sc.close();
 		return output;
 	}
+	
+	private Scanner getScanner() throws FileNotFoundException{
+		return new Scanner(new File(this.getFileAddress()));
+	}
+
+	@Override
+	public String toString() {
+		return this.getFromFile();
+
+	}
+	
 
 }
